@@ -4,6 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DollVerse · 项目介绍</title>
+  <!-- 填入 GA4 衡量 ID（G-XXXXXXXXXX）后生效；留空则不上报 -->
+  <script>
+    const GA_MEASUREMENT_ID = "";
+    if (GA_MEASUREMENT_ID) {
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () { dataLayer.push(arguments); };
+      gtag("js", new Date());
+      gtag("config", GA_MEASUREMENT_ID, { anonymize_ip: true });
+      const s = document.createElement("script");
+      s.async = true;
+      s.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_MEASUREMENT_ID;
+      document.head.appendChild(s);
+    }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet" />
@@ -206,6 +220,22 @@
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
     const PDF_URL = "./DollVerse_202605.pdf";
+    let lastTrackedPage = 0;
+
+    function trackEvent(name, params) {
+      if (typeof gtag !== "function") return;
+      gtag("event", name, params || {});
+    }
+
+    function trackSlideView(num) {
+      if (!pdfDoc || num === lastTrackedPage) return;
+      lastTrackedPage = num;
+      trackEvent("pdf_page_view", {
+        page_number: num,
+        total_pages: pdfDoc.numPages,
+      });
+    }
+
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     const pageInfo = document.getElementById("pageInfo");
@@ -256,6 +286,7 @@
       pageInfo.textContent = `${num} / ${pdfDoc.numPages}`;
       prevBtn.disabled = num <= 1;
       nextBtn.disabled = num >= pdfDoc.numPages;
+      trackSlideView(num);
     }
 
     function queueRenderPage(num) {
@@ -281,6 +312,7 @@
     prevBtn.addEventListener("click", onPrevPage);
     nextBtn.addEventListener("click", onNextPage);
     downloadBtn.addEventListener("click", () => {
+      trackEvent("pdf_download", { file_name: "DollVerse_202605.pdf" });
       const a = document.createElement("a");
       a.href = PDF_URL;
       a.download = "DollVerse_202605.pdf";
