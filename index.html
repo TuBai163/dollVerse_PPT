@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DollVerse · 项目介绍</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1a1a1f;
+      --paper: #f4f1ea;
+      --accent: #3d5a80;
+      --muted: #6b6b73;
+      --bar-h: 56px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--ink);
+      color: var(--paper);
+      font-family: "Inter", "Noto Sans SC", system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    header {
+      flex: 0 0 var(--bar-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 20px;
+      background: rgba(26, 26, 31, 0.96);
+      border-bottom: 1px solid rgba(244, 241, 234, 0.08);
+      backdrop-filter: blur(8px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand h1 {
+      font-family: "Noto Serif SC", serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    .brand span {
+      font-size: 0.78rem;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(244, 241, 234, 0.14);
+      background: rgba(244, 241, 234, 0.06);
+      color: var(--paper);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    button:hover:not(:disabled) {
+      background: rgba(244, 241, 234, 0.12);
+      border-color: rgba(244, 241, 234, 0.24);
+    }
+
+    button:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .page-info {
+      min-width: 88px;
+      text-align: center;
+      font-size: 0.82rem;
+      color: rgba(244, 241, 234, 0.78);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .viewer-wrap {
+      flex: 1;
+      position: relative;
+      background: #111116;
+      overflow: auto;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 16px 32px;
+    }
+
+    #canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+      background: #fff;
+    }
+
+    .loading, .error {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: rgba(244, 241, 234, 0.72);
+      font-size: 0.92rem;
+      pointer-events: none;
+    }
+
+    .error { color: #f2b8b5; }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 2px solid rgba(244, 241, 234, 0.15);
+      border-top-color: var(--paper);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hint {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(26, 26, 31, 0.88);
+      border: 1px solid rgba(244, 241, 234, 0.1);
+      color: rgba(244, 241, 234, 0.55);
+      font-size: 0.75rem;
+      pointer-events: none;
+    }
+
+    @media (max-width: 640px) {
+      header { padding: 0 12px; }
+      .brand span { display: none; }
+      button { padding: 8px 10px; }
+      .hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <h1>DollVerse</h1>
+        <span>项目介绍 · 2026.05</span>
+      </div>
+      <div class="controls">
+        <button id="prev" type="button" aria-label="上一页">← 上一页</button>
+        <div class="page-info" id="pageInfo">— / —</div>
+        <button id="next" type="button" aria-label="下一页">下一页 →</button>
+        <button id="download" type="button">下载 PDF</button>
+      </div>
+    </header>
+
+    <main class="viewer-wrap" id="viewer">
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>正在加载演示文稿…</div>
+      </div>
+      <canvas id="canvas" hidden></canvas>
+      <div class="error" id="error" hidden>加载失败，请刷新页面或下载 PDF 查看。</div>
+    </main>
+  </div>
+
+  <div class="hint">← → 翻页 · 滚轮缩放</div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.min.mjs" type="module"></script>
+  <script type="module">
+    import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.min.mjs";
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.worker.min.mjs";
+
+    const PDF_URL = "./DollVerse_202605.pdf";
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const pageInfo = document.getElementById("pageInfo");
+    const prevBtn = document.getElementById("prev");
+    const nextBtn = document.getElementById("next");
+    const downloadBtn = document.getElementById("download");
+    const loading = document.getElementById("loading");
+    const errorEl = document.getElementById("error");
+    const viewer = document.getElementById("viewer");
+
+    let pdfDoc = null;
+    let pageNum = 1;
+    let pageRendering = false;
+    let pageNumPending = null;
+    let scale = 1.2;
+
+    function fitScale(page) {
+      const viewport = page.getViewport({ scale: 1 });
+      const maxWidth = viewer.clientWidth - 32;
+      const maxHeight = viewer.clientHeight - 48;
+      const widthScale = maxWidth / viewport.width;
+      const heightScale = maxHeight / viewport.height;
+      return Math.min(widthScale, heightScale, 2.2) * (window.devicePixelRatio || 1);
+    }
+
+    function renderPage(num) {
+      pageRendering = true;
+      pdfDoc.getPage(num).then((page) => {
+        scale = fitScale(page);
+        const viewport = page.getViewport({ scale });
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.width = `${viewport.width / (window.devicePixelRatio || 1)}px`;
+        canvas.style.height = `${viewport.height / (window.devicePixelRatio || 1)}px`;
+
+        const renderContext = { canvasContext: ctx, viewport };
+        const renderTask = page.render(renderContext);
+
+        renderTask.promise.then(() => {
+          pageRendering = false;
+          if (pageNumPending !== null) {
+            renderPage(pageNumPending);
+            pageNumPending = null;
+          }
+        });
+      });
+
+      pageInfo.textContent = `${num} / ${pdfDoc.numPages}`;
+      prevBtn.disabled = num <= 1;
+      nextBtn.disabled = num >= pdfDoc.numPages;
+    }
+
+    function queueRenderPage(num) {
+      if (pageRendering) {
+        pageNumPending = num;
+      } else {
+        renderPage(num);
+      }
+    }
+
+    function onPrevPage() {
+      if (pageNum <= 1) return;
+      pageNum -= 1;
+      queueRenderPage(pageNum);
+    }
+
+    function onNextPage() {
+      if (!pdfDoc || pageNum >= pdfDoc.numPages) return;
+      pageNum += 1;
+      queueRenderPage(pageNum);
+    }
+
+    prevBtn.addEventListener("click", onPrevPage);
+    nextBtn.addEventListener("click", onNextPage);
+    downloadBtn.addEventListener("click", () => {
+      const a = document.createElement("a");
+      a.href = PDF_URL;
+      a.download = "DollVerse_202605.pdf";
+      a.click();
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft" || e.key === "PageUp") onPrevPage();
+      if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") {
+        e.preventDefault();
+        onNextPage();
+      }
+    });
+
+    window.addEventListener("resize", () => queueRenderPage(pageNum));
+
+    pdfjsLib.getDocument(PDF_URL).promise
+      .then((pdf) => {
+        pdfDoc = pdf;
+        loading.hidden = true;
+        canvas.hidden = false;
+        renderPage(pageNum);
+      })
+      .catch(() => {
+        loading.hidden = true;
+        errorEl.hidden = false;
+      });
+  </script>
+</body>
+</html>
