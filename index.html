@@ -137,6 +137,8 @@
       pointer-events: none;
     }
 
+    .loading[hidden], .error[hidden], #canvas[hidden] { display: none !important; }
+
     .error { color: #f2b8b5; }
 
     .spinner {
@@ -198,12 +200,10 @@
 
   <div class="hint">← → 翻页 · 滚轮缩放</div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.min.mjs" type="module"></script>
-  <script type="module">
-    import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.min.mjs";
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.worker.min.mjs";
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
     const PDF_URL = "./DollVerse_202605.pdf";
     const canvas = document.getElementById("canvas");
@@ -311,3 +311,4 @@
   </script>
 </body>
 </html>
+
